@@ -193,9 +193,13 @@
 			}
 		}
 
-
+		/// <summary>
+		/// 预显示 Cube ，虚线等，也包含（预览）模型
+		/// </summary>
+		/// <param name="sceneView"></param>
 		private static void SceneGUI_Cursor (SceneView sceneView) {
 
+			#region  < Refresh & Check >
 			// Refresh - Need Move Mouse To Paint Pos
 			if (NeedMoveMouseToPaintPos.HasValue) {
 				if (!Mathf.Approximately(NeedMoveMouseToPaintPos.Value.x, Event.current.mousePosition.x) ||
@@ -220,7 +224,8 @@
 					return;
 				}
 			}
-
+			#endregion
+			
 			// Do it
 			RaycastHit? closestHit = null;
 			var ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
@@ -232,7 +237,7 @@
 				}
 			}
 
-			// Cusor
+			#region  < Cusor >
 			Vector3? cursorPos = null;
 			Vector3 cursorNormal = default;
 			float cellSize = EditingRenderer.CellSize;
@@ -240,9 +245,9 @@
 			bool wandShape = UsingTool == JujubeTool.Wand || (UsingTool == JujubeTool.Paint && PaintMode == JujubePaintMode.Bucket);
 			bool painting = UsingTool == JujubeTool.Brush;
 			bool picking = UsingTool == JujubeTool.Pick;
-			bool isShapeCursor = false;
+			bool isShapeCursor = false;//控制拖动时，不显示 PrefabCursor
 			bool mouseInJujubeHandle = MouseInJujubeHandle();
-			if (closestHit.HasValue) {
+			if (closestHit.HasValue) {//碰到可以叠加（原来的已有一层底）
 				// Block-Based Cursor
 				var hit = closestHit.Value;
 				Vector3 pivotOffset = new Vector3(
@@ -254,6 +259,8 @@
 				cursorPos = hit.transform.position + (
 					painting ? pivotOffset + hit.normal.normalized * cellSize : pivotOffset
 				);
+				//2023/1/15 增加默认层级偏移（可用 Z|C 键控制—）
+				cursorPos += new Vector3(0, cellSize * m_CurrHeightLevel);
 				cursorNormal = hit.normal.normalized;
 
 				// Draw It
@@ -288,6 +295,8 @@
 						localPoint.z = EditorUtil.Snap(localPoint.z, 1f / cellSize);
 						point = EditingRenderer.transform.localToWorldMatrix.MultiplyPoint3x4(localPoint);
 						cursorPos = point;
+						//2023/1/15 增加默认层级偏移（可用 Z|C 键控制—）
+						cursorPos += new Vector3(0, cellSize * m_CurrHeightLevel);
 						cursorNormal = EditingRenderer.transform.up.normalized;
 						// Draw It
 						if (!painting || !NeedMoveMouseToPaintPos.HasValue) {
@@ -308,7 +317,11 @@
 				}
 			}
 
-			// Repaint
+			
+
+			#endregion
+
+			// Repaint 刷新 SceneView
 			if (cursorPos.HasValue != CursorPos.HasValue) {
 				sceneView.Repaint();
 			} else if (cursorPos.HasValue && (!EditorUtil.Vector3Similar(cursorPos.Value, CursorPos.Value) || !EditorUtil.Vector3Similar(cursorNormal, CursorNormal))) {
@@ -318,8 +331,15 @@
 			CursorPos = cursorPos;
 			CursorNormal = cursorNormal;
 
-			// Prefab Cursor
-			bool hasPrefabCursor = !isShapeCursor && CursorPos.HasValue && painting && !NeedMoveMouseToPaintPos.HasValue;
+			#region < PrefabCursor >
+			//Check if need to Show PrefabCursor
+			//Notice: (var)JujubeScene.HidePrefabCursor  is in JujubeScene_Control
+			bool hasPrefabCursor = !JujubeScene.m_HidePrefabCursor 
+			                       && !isShapeCursor 
+			                       && CursorPos.HasValue 
+			                       && painting 
+			                       && !NeedMoveMouseToPaintPos.HasValue;
+			
 			if (hasPrefabCursor) {
 				EditingRoot_Cursor.position = CursorPos.Value;
 				EditingRoot_Cursor.rotation = EditingRenderer.transform.rotation;
@@ -356,6 +376,7 @@
 				}
 			}
 			TrySetCursorPrefabActive(hasPrefabCursor, true);
+			#endregion
 		}
 
 
@@ -630,10 +651,14 @@
 		private static void PerformWithShape (Vector3Int min, Vector3Int max, Vector3Int cursorPos, int maxPerformCount, JujubeWandMode? wandMode, System.Func<Vector3Int, bool> perform, System.Action overDoneCallback = null) {
 			bool overDone = false;
 			int doneCount = 0;
+			Debug.LogError("PerformWithShape 1");
 			if (!wandMode.HasValue) {
 				// Box Shape
 				for (int y = min.y; y <= max.y && !overDone; y++) {
-					if (y < 0) { continue; }
+					//if (y < 0) { continue; }
+					//已修改下限值，小于 0 也是可以创建的
+					//Debug.LogError("PerformWithShape 3 y=" + cursorPos.y);
+					if (y < JujubeRenderer.m_LimitPerformY) return;
 					for (int x = min.x; x <= max.x && !overDone; x++) {
 						for (int z = min.z; z <= max.z && !overDone; z++) {
 							if (perform(new Vector3Int(x, y, z))) {
@@ -649,7 +674,11 @@
 
 			} else {
 				// Wand Shape
-				if (cursorPos.y < 0) { return; }
+				//已修改下限值，小于 0 也是可以创建的
+				//if (cursorPos.y < 0) { return; }
+				Debug.LogError("PerformWithShape 2 y=" + cursorPos.y);
+				if (cursorPos.y < JujubeRenderer.m_LimitPerformY) return;
+				
 				int targetLayerIndex = LayerMode == JujubeLayerMode.AllLayer ? -1 : SelectingLayerIndex;
 				var block = EditingRenderer.GetBlockIndex(cursorPos, targetLayerIndex, true).block;
 				if (block == null) { return; }

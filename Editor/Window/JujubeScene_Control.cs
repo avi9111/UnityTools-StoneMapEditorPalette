@@ -19,6 +19,13 @@
 		private static bool Ctrl_Alt => Event.current.control || Event.current.alt;
 		private static bool Ctrl_Shift => Event.current.control || Event.current.shift;
 		private static bool Alt_Shift => Event.current.alt || Event.current.shift;
+		private static bool m_HidePrefabCursor;
+		static int _heightLevel=0;
+		private static int m_CurrHeightLevel {
+			get => _heightLevel;
+			set => _heightLevel = Mathf.Clamp(value, -SMapEditor.Core.JujubeRenderer.g_MaxHeightLevel, JujubeRenderer.g_MaxHeightLevel);
+		}
+
 
 
 
@@ -28,8 +35,6 @@
 		public static void CreateMap () {
 			Selection.activeGameObject = new GameObject("New Jujube Map", typeof(JujubeRenderer));
 		}
-
-
 
 		[MenuItem(JUJUBE_MENU_ROOT + "/Edit Selecting", priority = 1)]
 		public static void EditSelctingMap () {
@@ -256,8 +261,10 @@
 				}
 			}
 		}
-
-
+		/// <summary>
+		/// 键盘，鼠标，上下层级等一些列控制
+		/// </summary>
+		/// <param name="sceneView"></param>
 		private static void SceneGUI_Control (SceneView sceneView) {
 			if (FocusingTextField) { return; }
 			if (Event.current.type == EventType.KeyDown) {
@@ -431,7 +438,7 @@
 					Event.current.Use();
 					break;
 				}
-				case KeyCode.Minus: {
+				case KeyCode.Minus: {//减号 - 下降一层
 					if (Ctrl_Alt_Shift) { break; }
 					MoveSelectingBlock(sceneView, 0, -1, true);
 					SceneView.RepaintAll();
@@ -446,7 +453,7 @@
 					Event.current.Use();
 					break;
 				}
-				case KeyCode.Equals: {
+				case KeyCode.Equals: {//等号 = 上升一层
 					if (Ctrl_Alt_Shift) { break; }
 					MoveSelectingBlock(sceneView, 0, 1, true);
 					SceneView.RepaintAll();
@@ -459,8 +466,17 @@
 
 		private static void SceneGUI_Key_Tool () {
 			switch (Event.current.keyCode) {
-
-
+				case KeyCode.J:
+					JujubeScene.m_HidePrefabCursor = !m_HidePrefabCursor;
+					break;
+				case  KeyCode.K:
+					m_CurrHeightLevel--;
+					Debug.LogError("height?" + m_CurrHeightLevel);
+					break;
+				case KeyCode.L:
+					m_CurrHeightLevel++;
+					Debug.LogError("height?" + m_CurrHeightLevel);
+					break;
 				// Select
 				case KeyCode.Alpha1:
 				case KeyCode.M: {

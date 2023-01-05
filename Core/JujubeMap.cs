@@ -32,7 +32,8 @@
 		}
 		public int Y {
 			get => m_Y;
-			set => m_Y = (ushort)Mathf.Clamp(value, ushort.MinValue, ushort.MaxValue);
+			//set => m_Y = (ushort)Mathf.Clamp(value, ushort.MinValue, ushort.MaxValue);
+			set => m_Y = (short)Mathf.Clamp(value, short.MinValue, short.MaxValue);
 		}
 		public int Z {
 			get => m_Z;
@@ -49,7 +50,8 @@
 
 		// Api-Ser
 		[SerializeField] private short m_X = 0;
-		[SerializeField] private ushort m_Y = 0;
+		//[SerializeField] private ushort m_Y = 0;
+		[SerializeField] private short m_Y = 0;
 		[SerializeField] private short m_Z = 0;
 		[SerializeField] private byte m_RotZ = 0;
 		[SerializeField] private int m_Index = 0;

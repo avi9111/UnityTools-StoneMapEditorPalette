@@ -1,4 +1,7 @@
-﻿namespace SMapEditor.Core {
+﻿using JujubeMapEditor.Editor;
+using SMapEditor.Editor;
+
+namespace SMapEditor.Core {
 	using System.Collections;
 	using System.Collections.Generic;
 	using UnityEngine;
@@ -37,8 +40,13 @@
 
 
 		#region --- VAR ---
-
-
+		public static int g_MaxHeightLevel = 10;
+		public static float m_LimitPerformY
+		{
+			get { 
+				return -JujubeRenderer.g_MaxHeightLevel;//暂时5，之后根据 cellSize 决定？？？
+			}
+		}
 		// Const
 		private const float CELL_SIZE_MIN = 0.001f;
 
@@ -152,7 +160,12 @@
 
 
 		public (int layer, int blockIndex, JujubeBlock block) GetBlockIndex (Vector3Int pos, int layerIndex, bool visibleLayerOnly) {
-			if (pos.y < 0) { return (-1, -1, null); }
+			//if (pos.y < 0) { return (-1, -1, null); }
+			if (pos.y < JujubeRenderer.g_MaxHeightLevel)//暂时取 -5 == 5（cell) * 1 (cellSize)
+			{
+				return (-1, -1, null);
+				
+			}
 			if (m_Mode == JujubeRendererMode.Develop) {
 				int len = Physics.OverlapSphereNonAlloc(
 					transform.localToWorldMatrix.MultiplyPoint3x4((Vector3)pos * m_CellSize),

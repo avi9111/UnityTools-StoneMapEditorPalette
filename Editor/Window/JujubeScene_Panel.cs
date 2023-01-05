@@ -354,7 +354,6 @@
 
 
 						if (UsingTool == JujubeTool.Select || UsingTool == JujubeTool.Wand) {
-
 							// Wand Option
 							if (UsingTool == JujubeTool.Wand) {
 
@@ -392,7 +391,8 @@
 							GUI.enabled = GUI.enabled && SelectingBlockMap.Count > 0;
 							_rect = GUIRect(TOOLBAR_WIDTH, TOOLBAR_BUTTON_HEIGHT_M);
 							if (GUI.Button(_rect, new GUIContent(GetJujubeImage($"RotateCW{(EditorGUIUtility.isProSkin ? "_pro" : "_per")}.png")))) {
-								RotateSelectingBlocks(true);
+								Debug.Log("rotate wait...");
+								RotateSelectingBlocks(true);//不知道，这两个好像 wait 可旋转的按钮有什么用
 								RefreshMapBound();
 								Event.current.Use();
 							}
@@ -402,8 +402,18 @@
 								RefreshMapBound();
 								Event.current.Use();
 							}
+							
 							GUI.enabled = oldEAlt;
 
+						}
+						//增加一个按钮查找。。迭代，定位对象用（小地图-有用）
+						if (UsingTool == JujubeTool.Select)
+						{
+							_rect = GUIRect(TOOLBAR_WIDTH, TOOLBAR_BUTTON_HEIGHT_M);
+							if (GUI.Button(_rect, ">"))
+							{
+								Debug.Log("fff");
+							}
 						}
 
 						break;
