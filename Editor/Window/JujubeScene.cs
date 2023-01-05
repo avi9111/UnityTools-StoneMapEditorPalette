@@ -708,9 +708,17 @@
 		}
 
 
-		private static void RegisterJujubeUndo () => Undo.RegisterCompleteObjectUndo(new Object[] {
-			EditingRenderer, EditingRenderer.Map, EditingRenderer.Palette
-		}, "Jujube");
+		private static void RegisterJujubeUndo()
+		{
+			//为了测试select 为什么莫名更新位置，而加的Debug
+			//（从一个Menu->Edit 的可回滚这个线索，...
+			// 发现 selection 应该会暗地调用了 move 操作，刚好undo也有记录）
+			Debug.LogError("start Register Undo.........");
+			Undo.RegisterCompleteObjectUndo(new Object[]
+			{
+				EditingRenderer, EditingRenderer.Map, EditingRenderer.Palette
+			}, "Jujube");
+		}
 
 
 		// Block Shake
@@ -739,6 +747,7 @@
 				for (int blockIndex = 0; blockIndex < layer.Blocks.Count; blockIndex++) {
 					var blockTF = EditingRenderer.GetBlockTF(layerIndex, blockIndex);
 					if (blockTF == null) { continue; }
+					Debug.LogWarning("sely=" +blockTF.position.y);
 					blockTF.localRotation = hasSelection && SelectingBlockMap.ContainsKey((layerIndex, blockIndex)) ?
 						Quaternion.Euler(
 							BLOCK_SHAKE_CACHE[cacheIndex],

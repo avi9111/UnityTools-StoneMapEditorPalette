@@ -116,6 +116,7 @@ namespace SMapEditor.Core {
 
 
 		public Transform GetBlockTF (int layerIndex, int blockIndex) {
+			Debug.LogError("GetBlock i=" +blockIndex);
 			var layerTf = GetLayerTF(layerIndex);
 			if (layerTf != null) {
 				return blockIndex >= 0 && blockIndex < layerTf.childCount ? layerTf.GetChild(blockIndex) : null;
@@ -161,7 +162,7 @@ namespace SMapEditor.Core {
 
 		public (int layer, int blockIndex, JujubeBlock block) GetBlockIndex (Vector3Int pos, int layerIndex, bool visibleLayerOnly) {
 			//if (pos.y < 0) { return (-1, -1, null); }
-			if (pos.y < JujubeRenderer.g_MaxHeightLevel)//暂时取 -5 == 5（cell) * 1 (cellSize)
+			if (pos.y < JujubeRenderer.m_LimitPerformY)//暂时取 -5 == 5（cell) * 1 (cellSize)
 			{
 				return (-1, -1, null);
 				
@@ -243,6 +244,7 @@ namespace SMapEditor.Core {
 				RotZ = rotZ,
 			};
 			layer.Blocks.Add(block);
+			//开始生成（创建）物件 in Map
 			var blockTF = SpawnBlockTF(block, GetLayerTF(layerIndex), layer.Blocks.Count - 1, true);
 			RespawnEditColliderForBlock(blockTF);
 			return block;

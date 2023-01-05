@@ -280,7 +280,6 @@
 			GUI.enabled = layer != null && layer.Visible;
 			var panelRect = new Rect(0, 0, TOOLBAR_WIDTH, TOOLBAR_BUTTON_HEIGHT_M * ToolCount);
 			HandlesLayoutV(rect, () => {
-
 				// Tools 
 				for (int i = 0; i < ToolCount; i++) {
 
@@ -334,7 +333,6 @@
 				// Tool Option
 				Rect _rect = panelRect;
 				switch (UsingTool) {
-
 					case JujubeTool.Select:
 					case JujubeTool.Wand:
 					case JujubeTool.Erase: {
@@ -356,7 +354,6 @@
 						if (UsingTool == JujubeTool.Select || UsingTool == JujubeTool.Wand) {
 							// Wand Option
 							if (UsingTool == JujubeTool.Wand) {
-
 								// Wand Option
 								_rect = GUIRect(TOOLBAR_WIDTH, TOOLBAR_BUTTON_HEIGHT_M);
 								_label = WAND_OPTION_LABELS[WandModeIndex.Value];
@@ -412,7 +409,7 @@
 							_rect = GUIRect(TOOLBAR_WIDTH, TOOLBAR_BUTTON_HEIGHT_M);
 							if (GUI.Button(_rect, ">"))
 							{
-								Debug.Log("fff");
+								SelectNextBlock();
 							}
 						}
 
@@ -470,6 +467,59 @@
 
 		}
 
+		private static int selectNextCursor;
+		static void SelectNextBlock()
+		{
+			if (EditingRenderer == null) return;
+			var tf = EditingRenderer.gameObject.transform;
+			int cursor = 0;
+			for (int i = 0; i < tf.childCount; i++)
+			{
+				var layer = tf.GetChild(i);
+				for (int j = 0; j < layer.childCount; j++)
+				{
+					cursor++;
+				}
+			}
+			//与计算的最大可能子 Block 数量（cursor)比是否超出
+			if (selectNextCursor >= cursor)
+			{
+				selectNextCursor = 0;
+			}
+
+			cursor = 0;
+			for (int i = 0; i < tf.childCount; i++)
+			{
+				var layer = tf.GetChild(i);
+				for (int j = 0; j < layer.childCount; j++)
+				{
+					if (cursor >= selectNextCursor)
+					{
+						//开始选择。。。。。i==layerIndex 
+						SceneSelect(i,j);
+						selectNextCursor++;
+						return;
+					}
+
+					cursor++;
+				}
+			}
+		}
+
+		static bool SceneSelect(int layerIndex,int subIndex)
+		{
+			
+			var layer = EditingRenderer.Map[layerIndex];
+			if (layer == null) { return false; }
+			ClearSelection();
+			// if (Event.current.control && Event.current.shift) {
+			// 	RemoveSelection(_layerIndex, index);
+			// } else {
+				AddSelection(layerIndex, subIndex, layer[subIndex]);
+			//}
+
+			return true;
+		}
 
 		private static void SceneGUI_State (SceneView sceneView) {
 			if (!ShowStateLabel.Value || EditingRenderer == null || EditingRenderer.Map == null) { return; }

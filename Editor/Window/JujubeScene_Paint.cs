@@ -492,6 +492,8 @@
 			RefreshBlockShakeCache();
 
 			PerformWithShape(min, max, cursorMapPos, MaxSelectionCount.Value, wandMode, (pos) => {
+				Debug.LogError("sel y=" + pos.y);
+				//判断是否在层内，如果layerIndex==-1，则判断所有层
 				(int _layerIndex, int index, _) = EditingRenderer.GetBlockIndex(pos, targetLayerIndex, true);
 				if (index < 0) { return false; }
 				var layer = EditingRenderer.Map[_layerIndex];
@@ -501,6 +503,8 @@
 				} else {
 					AddSelection(_layerIndex, index, layer[index]);
 				}
+				
+				Debug.LogError("sel y=" + layer[index].Position.y);
 				return true;
 			}, () => LogTempWarningMessage($"Can Not Select More Than {MaxSelectionCount.Value} Blocks"));
 
@@ -647,11 +651,20 @@
 			}
 		}
 
-
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="min"></param>
+		/// <param name="max"></param>
+		/// <param name="cursorPos"></param>
+		/// <param name="maxPerformCount"></param>
+		/// <param name="wandMode"></param>
+		/// <param name="perform">循环（触发）输出多个格子的 Pos</param>
+		/// <param name="overDoneCallback"></param>
 		private static void PerformWithShape (Vector3Int min, Vector3Int max, Vector3Int cursorPos, int maxPerformCount, JujubeWandMode? wandMode, System.Func<Vector3Int, bool> perform, System.Action overDoneCallback = null) {
 			bool overDone = false;
 			int doneCount = 0;
-			Debug.LogError("PerformWithShape 1");
+//			Debug.LogError("PerformWithShape 1");
 			if (!wandMode.HasValue) {
 				// Box Shape
 				for (int y = min.y; y <= max.y && !overDone; y++) {

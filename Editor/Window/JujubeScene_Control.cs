@@ -655,7 +655,7 @@
 			} else {
 				offset = screenY > 0 ? Vector3Int.up : Vector3Int.down;
 			}
-
+			Debug.LogError("move Sel Block");
 			offset.y = Mathf.Max(offset.y, -SelectingBlockMin.y);
 			if (offset == Vector3Int.zero) { return; }
 

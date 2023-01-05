@@ -69,6 +69,7 @@
 
 			// Move Handle
 			Vector3 oldLocalPos = 0.5f * (Vector3)(SelectingBlockMin + SelectingBlockMax);
+		
 			Vector3 oldPos = localToWorldMatrix.MultiplyPoint3x4(cellSize * oldLocalPos);
 			Vector3 newPos = oldPos;
 
@@ -112,8 +113,19 @@
 				Mathf.RoundToInt(newLocalPos.y - oldLocalPos.y),
 				Mathf.RoundToInt(newLocalPos.z - oldLocalPos.z)
 			);
+			Debug.LogError("block move before sely=" +localOffset.y +" miny=-" + SelectingBlockMin.y);
+			//本来 oldLocalPos 用于计算整个可选范围（最好是涵高低的三维区域的）
+			//但是因为加了选择层，oldLocalPos 含有了负数, 所以需要特殊判断 .y>=0(现在这个逻辑待验证）
 			// Clamp
-			localOffset.y = Mathf.Max(localOffset.y, -SelectingBlockMin.y);
+			if (SelectingBlockMin.y >= 0)
+			{
+				localOffset.y = Mathf.Max(localOffset.y, -SelectingBlockMin.y);
+			}
+			else
+			{
+				localOffset.y = Mathf.Max(localOffset.y, SelectingBlockMin.y);
+			}
+
 			if (localOffset != Vector3Int.zero) {
 				// Undo 
 				if (AllowRegisteUndoForMoveSelection) {
@@ -130,8 +142,10 @@
 					(int layerIndex, int blockIndex) = pair.Key;
 					(var block, var blockTF) = EditingRenderer.GetBlockAndBlockTF(layerIndex, blockIndex);
 					if (block == null || blockTF == null) { continue; }
+					Debug.LogError("block move sely=" +block.Position.y);
 					block.Position += localOffset;
 					blockTF.localPosition = (Vector3)block.Position * cellSize;
+					Debug.LogError("block after sely=" +block.Position.y);
 				}
 				// End
 				RefreshMapBound();
@@ -154,7 +168,9 @@
 				SelectingBlockMap.ContainsKey((layerIndex, blockIndex))
 			) { return; }
 			SelectingBlockMap.Add((layerIndex, blockIndex), block);
+			Debug.LogError($"add Sel i={blockIndex},y={block.Position.y} sely={SelectingBlockMin.y}");
 			SelectingBlockMin = Vector3Int.Min(SelectingBlockMin, block.Position);
+			Debug.LogError($"add after sely=" + SelectingBlockMin.y);
 			SelectingBlockMax = Vector3Int.Max(SelectingBlockMax, block.Position);
 			SelectingPivot = null;
 		}
